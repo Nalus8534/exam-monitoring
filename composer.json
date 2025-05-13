@@ -1,0 +1,25 @@
+{
+    "name": "your-org/exam-system",
+    "description": "ATC Examination Venue Monitoring System",
+    "type": "project",
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "phpoffice/phpword": "^0.18",
+        "smalot/pdfparser": "^2.0",
+        "guzzlehttp/guzzle": "^7.0",
+        "ext-json": "*",
+        "ext-mbstring": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
