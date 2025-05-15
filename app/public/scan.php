@@ -215,9 +215,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <li><a href="dashboard.php" class="<?= ($current_page == 'dashboard.php') ? 'active' : ''; ?>">
                     <span class="nav-icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
                 
-                <li><a href="scan.php" class="<?= ($current_page == 'scan.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-barcode"></i></span> Scan Student ID</a></li>
-                
                 <li><a href="assign_venue.php" class="<?= ($current_page == 'assign_venue.php') ? 'active' : ''; ?>">
                     <span class="nav-icon"><i class="fas fa-map-marker-alt"></i></span> Assign Venue</a></li>
                 
@@ -316,22 +313,17 @@ document.addEventListener("DOMContentLoaded", function() {
     let scanButton     = document.getElementById("scanButton");
     let studentDetails = document.getElementById("student_details");
 
-    // Default image URL (update as needed)
-    let defaultImageUrl = "../assets/images/default_user.png";
+    let defaultImageUrl = "../assets/images/default_user.png"; // adjust as needed
 
-    // Clears the student details container
     function clearStudentDetails() {
         studentDetails.innerHTML = "";
     }
 
-    // Function to display student details (including the image)
     function displayStudent(student) {
         let imageUrl = (student.image_path && student.image_path.trim() !== "")
-            ? `../../${student.image_path}`  // Adjust relative path accordingly
+            ? `../../${student.image_path}` 
             : defaultImageUrl;
-        
-        console.log("Displaying student image URL:", imageUrl);
-        
+            
         studentDetails.innerHTML = `
             <div class="student-details-card">
                 <img src="${imageUrl}" alt="Student Image" class="student-image" onerror="this.src='${defaultImageUrl}';">
@@ -341,26 +333,31 @@ document.addEventListener("DOMContentLoaded", function() {
                     <p><strong>NTA Level:</strong> ${student.nta_level}</p>
                     <p><strong>Exam No:</strong> ${student.exam_no}</p>
                     <p><strong>Program:</strong> ${student.program}</p>
-                    <p><strong>Venue:</strong> ${document.getElementById("venue").value}</p>
+                    <p><strong>Venue:</strong> ${document.getElementById("venue").value.trim()}</p>
                 </div>
             </div>
         `;
     }
 
-    // Trigger scanning when the scan button is clicked
     function triggerScan() {
         clearStudentDetails();
-    
-        let barcode     = barcodeInput.value.trim();
+        let barcode = barcodeInput.value.trim();
         let admissionNo = admissionInput.value.trim();
-    
+        let venue = document.getElementById("venue").value.trim();
+
         if (!barcode && !admissionNo) {
             studentDetails.innerHTML = "<p class='error-message'>Please enter an admission number or barcode.</p>";
             return;
         }
-    
-        // If barcode is available, use it; otherwise, use admission number.
-        let searchQuery = barcode ? `barcode=${barcode}` : `admission_no=${admissionNo}`;
+        if (!venue) {
+            studentDetails.innerHTML = "<p class='error-message'>Please select a venue.</p>";
+            return;
+        }
+        
+        // Build query string including venue parameter.
+        let searchQuery = barcode 
+                          ? `barcode=${encodeURIComponent(barcode)}&venue=${encodeURIComponent(venue)}`
+                          : `admission_no=${encodeURIComponent(admissionNo)}&venue=${encodeURIComponent(venue)}`;
         console.log("Searching with query:", searchQuery);
     
         fetch("fetch_student.php?" + searchQuery)
@@ -369,7 +366,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 console.log("Fetch response:", data);
                 if (data.success) {
                     displayStudent(data.student);
-                    // Clear inputs after a successful scan.
                     barcodeInput.value = "";
                     admissionInput.value = "";
                 } else {
@@ -382,15 +378,7 @@ document.addEventListener("DOMContentLoaded", function() {
             });
     }
 
-    // Listen for Enter key on the barcode input field
-    barcodeInput.addEventListener("keypress", function(e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            triggerScan();
-        }
-    });
-
-    // Also bind the scan button click to trigger scanning
+    // Trigger scan on button click.
     if (scanButton) {
         scanButton.addEventListener("click", function(e) {
             e.preventDefault();
@@ -398,9 +386,15 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Optionally, you could auto-focus the barcode input field on page load:
-    barcodeInput.focus();
+    // Optionally, listen for Enter key on the barcode input:
+    barcodeInput.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            triggerScan();
+        }
+    });
 });
 </script>
+
 </body>
 </html>

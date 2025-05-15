@@ -176,10 +176,7 @@ if (!empty($where_clause)) {
 
                 <li><a href="dashboard.php" class="<?= ($current_page == 'dashboard.php') ? 'active' : ''; ?>">
                     <span class="nav-icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
-                
-                <li><a href="scan.php" class="<?= ($current_page == 'scan.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-barcode"></i></span> Scan Student ID</a></li>
-                
+
                 <li><a href="assign_venue.php" class="<?= ($current_page == 'assign_venue.php') ? 'active' : ''; ?>">
                     <span class="nav-icon"><i class="fas fa-map-marker-alt"></i></span> Assign Venue</a></li>
                 
@@ -204,9 +201,6 @@ if (!empty($where_clause)) {
   <main class="main-content">
     <header class="content-header">
       <h1 class="page-title"><i class="fas fa-users"></i> Registered Students</h1>
-      <div class="header-actions">
-        <a href="dashboard.php"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
-      </div>
     </header>
     <div class="form-container">
       <!-- SEARCH FORM -->
