@@ -6,56 +6,59 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 header("Expires: Sat, 01 Jan 2000 00:00:00 GMT");
 
-require_once __DIR__ . '/../../config/db.php';
+// Require database connection
+require_once __DIR__ . "/../../config/db.php";
 
 // Restrict access only to authorized users
-if ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'admission_office') {
+if (!isset($_SESSION['admin_role']) || ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'admission office')) {
     header("Location: unauthorized.php");
     exit();
 }
+
 if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
     exit();
 }
 
+// Check database connection
 if ($conn->connect_error) {
-    die("Database Connection failed: " . $conn->connect_error);
+    die("Database connection failed: " . $conn->connect_error);
 }
 
-// Retrieve venue options dynamically from the venues table.
+// Retrieve venue options dynamically from the venues table
 $venues = [];
 $resultVenues = $conn->query("SELECT venue_name FROM venues ORDER BY venue_name ASC");
+
 if ($resultVenues) {
     while ($row = $resultVenues->fetch_assoc()) {
         $venues[] = $row;
     }
 }
 
-// Initialize variables for form submission and results.
-$student_info      = null;
-$error_message     = "";
-$info_message      = "";
-$selected_venue    = "";
+// Initialize variables for form submission and results
+$student_info = null;
+$error_message = "";
+$info_message = "";
+$selected_venue = "";
 $entered_admission = "";
 
 // Process form submission (venue and admission number)
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $selected_venue    = isset($_POST['venue']) ? trim($conn->real_escape_string($_POST['venue'])) : "";
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $selected_venue = isset($_POST['venue']) ? trim($conn->real_escape_string($_POST['venue'])) : "";
     $entered_admission = isset($_POST['admission_no']) ? trim($conn->real_escape_string($_POST['admission_no'])) : "";
-    
+
     if (empty($selected_venue)) {
         $error_message = "Please select a venue.";
     } elseif (empty($entered_admission)) {
         $error_message = "Admission number cannot be empty.";
     } else {
-        // Prepare query to fetch student details filtered by admission number and venue.
-        $stmt = $conn->prepare("SELECT s.name, s.admission_no, s.exam_no, s.program, s.image_path, s.venue 
-                                FROM students s 
-                                WHERE s.admission_no = ? AND s.venue = ?");
+        // Prepare query to fetch student details
+        $stmt = $conn->prepare("SELECT name, admission_no, exam_no, program, image_path, venue FROM students WHERE admission_no = ? AND venue = ?");
         if ($stmt) {
             $stmt->bind_param("ss", $entered_admission, $selected_venue);
             $stmt->execute();
             $result = $stmt->get_result();
+            
             if ($result && $result->num_rows > 0) {
                 $student_info = $result->fetch_assoc();
                 $info_message = "Student details found.";
@@ -69,8 +72,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 }
-$conn->close();
 
+$conn->close();
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
@@ -133,37 +136,56 @@ $current_page = basename($_SERVER['PHP_SELF']);
             font-weight: bold;
             margin-top: 15px;
         }
-        /* Student Details Card - Flex Layout for Passport Photo Style */
-        .student-details-card {
-            margin-top: 20px;
-            background: #f8f8f8;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
-        }
-        /* Passport-Style Student Image */
-        .student-image {
-            width: 150px;
-            height: 200px;
-            object-fit: cover;
-            margin-right: 20px;
-            border: 1px solid #ccc;
-            /* Passport style: rectangular, no rounded corners */
-            border-radius: 0;
-        }
-        /* Details Section - Left Aligned */
-        .details {
-            text-align: left;
-            width: 100%;
-        }
-        .details p {
-            font-size: 16px;
-            color: #333;
-            margin: 5px 0;
-        }
+.scan-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.form-container, .student-details-container {
+    flex: 1;
+    min-width: 300px;
+}
+
+/* Student details card styling */
+.student-details-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.student-image {
+    width: 150px;
+    height: 200px;
+    object-fit: cover;
+    margin-right: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.details {
+    text-align: left;
+    width: 100%;
+}
+
+.details p {
+    font-size: 16px;
+    color: #333;
+    margin: 8px 0;
+}
+
+.details h3 {
+    font-size: 22px;
+    color: #2c3e50;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
     </style>
 </head>
 <body>
@@ -218,74 +240,167 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </nav>
 </aside>
         <!-- Main Content -->
-        <main class="main-content">
-            <header class="content-header">
-                <h1>Scan Student ID</h1>
-            </header>
-            <div class="form-container">
-                <form id="scanForm" method="post" action="scan.php">
-                    <label for="venue">Select Venue:</label>
-                    <select name="venue" id="venue" required>
-                        <option value="">-- Choose Venue --</option>
-                        <?php foreach ($venues as $v): ?>
-                            <option value="<?= htmlspecialchars($v['venue_name']); ?>" <?= ($selected_venue === $v['venue_name']) ? 'selected' : ''; ?>>
-                                <?= htmlspecialchars($v['venue_name']); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                    <label for="admission_no">Enter Admission Number:</label>
-                    <input type="text" id="admission_no" name="admission_no" placeholder="Enter admission number" value="<?= htmlspecialchars($entered_admission); ?>" required autofocus>
-                    <button type="submit" class="btn-primary">Scan Student</button>
-                </form>
-                <?php if (!empty($error_message)): ?>
-                    <p class="error-message"><?= htmlspecialchars($error_message); ?></p>
-                <?php endif; ?>
-                <?php if (!empty($info_message) && $student_info): ?>
-                    <div class="student-details-card">
-                        <?php
-                        // Build the image display URL.
-                        // The stored value is something like "uploads/4504.jpg" and we need to prepend "../../"
-                        // because scan.php is in app/public
-                        $relative_path      = $student_info['image_path'];
-                        $display_image_url  = "../../" . $relative_path;
-                        
-                        // Build an absolute file path for checking existence.
+<main class="main-content">
+    <header class="content-header">
+        <h1>Scan Student ID</h1>
+    </header>
+    
+    <!-- Parent container using flex layout for side-by-side display -->
+    <div class="scan-wrapper">
+        <!-- Left Column: Form -->
+        <div class="form-container">
+            <form id="scanForm" method="post">
+                <label for="venue">Select Venue:</label>
+                <select name="venue" id="venue" required>
+                    <option value="">-- Choose Venue --</option>
+                    <?php foreach ($venues as $v): ?>
+                        <option value="<?= htmlspecialchars($v['venue_name']); ?>" <?= ($selected_venue === $v['venue_name']) ? 'selected' : ''; ?>>
+                            <?= htmlspecialchars($v['venue_name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+    
+                <label for="admission_no">Enter Admission Number (Optional):</label>
+                <input type="text" id="admission_no" name="admission_no" placeholder="Enter admission number manually">
+    
+                <div class="scan-container">
+                    <h2>Barcode Scanner</h2>
+                    <!-- Barcode input field that receives scanner input -->
+                    <input type="text" id="barcode_input" name="barcode" placeholder="Scan barcode here..." autofocus>
+                                    </div>
+    
+                <button type="button" id="scanButton" class="btn-primary">Scan Student</button>
+            </form>
+        </div>
+    
+        <!-- Right Column: Student Details -->
+        <div class="student-details-container" id="student_details">
+            <!-- This area will be filled by JS or by PHP server-side messages -->
+            <?php if (!empty($error_message)): ?>
+                <p class="error-message"><?= htmlspecialchars($error_message); ?></p>
+            <?php endif; ?>
+            <?php if (!empty($info_message) && $student_info): ?>
+                <div class="student-details-card">
+                    <?php
+                        // Build image URL.
+                        $relative_path     = $student_info['image_path'];
+                        $display_image_url = "../../" . $relative_path;
+                        // Check if file exists; if not, use default image.
                         $absolute_path = __DIR__ . "/../../" . $relative_path;
                         if (!file_exists($absolute_path)) {
                             $display_image_url = "../assets/images/default_user.png";
                         }
-                        ?>
-                        <img src="<?= htmlspecialchars($display_image_url); ?>" alt="Student Image" class="student-image">
-                        <div class="details">
-                            <p><strong>Name:</strong> <?= htmlspecialchars($student_info['name']); ?></p>
-                            <p><strong>Admission No:</strong> <?= htmlspecialchars($student_info['admission_no']); ?></p>
-                            <p><strong>Exam No:</strong> <?= htmlspecialchars($student_info['exam_no'] ?? 'N/A'); ?></p>
-                            <p><strong>Program:</strong> <?= htmlspecialchars($student_info['program']); ?></p>
-                            <p><strong>Venue:</strong> <?= htmlspecialchars($student_info['venue']); ?></p>
-                        </div>
+                    ?>
+                    <img src="<?= htmlspecialchars($display_image_url); ?>" alt="Student Image" class="student-image">
+                    <div class="details">
+                        <p><strong>Name:</strong> <?= htmlspecialchars($student_info['name']); ?></p>
+                        <p><strong>Admission No:</strong> <?= htmlspecialchars($student_info['admission_no']); ?></p>
+                        <p><strong>Exam No:</strong> <?= htmlspecialchars($student_info['exam_no'] ?? 'N/A'); ?></p>
+                        <p><strong>Program:</strong> <?= htmlspecialchars($student_info['program']); ?></p>
+                        <p><strong>Venue:</strong> <?= htmlspecialchars($student_info['venue']); ?></p>
                     </div>
-                <?php elseif (!empty($info_message) && !$student_info): ?>
-                    <p class="error-message"><?= htmlspecialchars($info_message); ?></p>
-                <?php endif; ?>
-            </div>
-        </main>
+                </div>
+            <?php elseif (!empty($info_message) && !$student_info): ?>
+                <p class="error-message"><?= htmlspecialchars($info_message); ?></p>
+            <?php endif; ?>
+        </div>
+    </div> <!-- End .scan-wrapper -->
+</main>
     </div>
-    <!-- JavaScript to refresh/clear the form after scan -->
-    <script>
-        // If a scan result is shown (either success or error), reload the page after 3 seconds.
-        <?php if (!empty($info_message) || !empty($error_message)): ?>
-            setTimeout(function(){
-                // Reload the page without query parameters
-                window.location.href = window.location.pathname;
-            }, 3000);
-        <?php endif; ?>
 
-        // Clear form inputs if the page is navigated back via the browser's back button
-        window.addEventListener("pageshow", function(event) {
-            if (event.persisted) {
-                document.getElementById("scanForm").reset();
-            }
+    <!-- JavaScript to refresh/clear the form after scan -->
+<script>
+document.addEventListener("DOMContentLoaded", function() { 
+    let barcodeInput   = document.getElementById("barcode_input");
+    let admissionInput = document.getElementById("admission_no");
+    let scanButton     = document.getElementById("scanButton");
+    let studentDetails = document.getElementById("student_details");
+
+    // Default image URL (update as needed)
+    let defaultImageUrl = "../assets/images/default_user.png";
+
+    // Clears the student details container
+    function clearStudentDetails() {
+        studentDetails.innerHTML = "";
+    }
+
+    // Function to display student details (including the image)
+    function displayStudent(student) {
+        let imageUrl = (student.image_path && student.image_path.trim() !== "")
+            ? `../../${student.image_path}`  // Adjust relative path accordingly
+            : defaultImageUrl;
+        
+        console.log("Displaying student image URL:", imageUrl);
+        
+        studentDetails.innerHTML = `
+            <div class="student-details-card">
+                <img src="${imageUrl}" alt="Student Image" class="student-image" onerror="this.src='${defaultImageUrl}';">
+                <div class="details">
+                    <h3>${student.name}</h3>
+                    <p><strong>Admission No:</strong> ${student.admission_no}</p>
+                    <p><strong>NTA Level:</strong> ${student.nta_level}</p>
+                    <p><strong>Exam No:</strong> ${student.exam_no}</p>
+                    <p><strong>Program:</strong> ${student.program}</p>
+                    <p><strong>Venue:</strong> ${document.getElementById("venue").value}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    // Trigger scanning when the scan button is clicked
+    function triggerScan() {
+        clearStudentDetails();
+    
+        let barcode     = barcodeInput.value.trim();
+        let admissionNo = admissionInput.value.trim();
+    
+        if (!barcode && !admissionNo) {
+            studentDetails.innerHTML = "<p class='error-message'>Please enter an admission number or barcode.</p>";
+            return;
+        }
+    
+        // If barcode is available, use it; otherwise, use admission number.
+        let searchQuery = barcode ? `barcode=${barcode}` : `admission_no=${admissionNo}`;
+        console.log("Searching with query:", searchQuery);
+    
+        fetch("fetch_student.php?" + searchQuery)
+            .then(response => response.json())
+            .then(data => {
+                console.log("Fetch response:", data);
+                if (data.success) {
+                    displayStudent(data.student);
+                    // Clear inputs after a successful scan.
+                    barcodeInput.value = "";
+                    admissionInput.value = "";
+                } else {
+                    studentDetails.innerHTML = "<p class='error-message'>Student not found!</p>";
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching student:", error);
+                studentDetails.innerHTML = "<p class='error-message'>Unexpected error occurred while searching.</p>";
+            });
+    }
+
+    // Listen for Enter key on the barcode input field
+    barcodeInput.addEventListener("keypress", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            triggerScan();
+        }
+    });
+
+    // Also bind the scan button click to trigger scanning
+    if (scanButton) {
+        scanButton.addEventListener("click", function(e) {
+            e.preventDefault();
+            triggerScan();
         });
-    </script>
+    }
+
+    // Optionally, you could auto-focus the barcode input field on page load:
+    barcodeInput.focus();
+});
+</script>
 </body>
 </html>
