@@ -1,6 +1,7 @@
 <?php
-// Temporary script to generate a password hash
-$password = 'atc123'; // <-- **CHANGE THIS** to the password you want for your admin
-$hashed_password = password_hash($password, PASSWORD_DEFAULT);
-echo "Your hashed password is: " . $hashed_password;
+$plain_password = "atc123"; // Replace with your desired password
+$hashed_password = password_hash($plain_password, PASSWORD_DEFAULT);
+
+// Print the hashed password
+echo "Hashed Password: " . $hashed_password;
 ?>

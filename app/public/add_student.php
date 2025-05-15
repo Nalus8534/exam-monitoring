@@ -9,6 +9,12 @@ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 header("Expires: Sat, 01 Jan 2000 00:00:00 GMT");
 
+// Restrict access only to authorized users
+if ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'admission_office') {
+    header("Location: unauthorized.php");
+    exit();
+}
+
 // Load dependencies
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/db.php';
@@ -225,13 +231,27 @@ $current_page = basename($_SERVER['PHP_SELF']);
 </head>
 <body>
 <div class="app-container">
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <img src="../assets/images/atc_logo.png" alt="College Logo" class="logo">
-            <h3>ATC Exam System</h3>
-        </div>
-        <nav class="sidebar-nav">
-            <ul>
+<aside class="sidebar">
+    <div class="sidebar-header">
+        <img src="../assets/images/atc_logo.png" alt="Exam System" class="logo">
+        <h3>Dashboard</h3>
+    </div>
+    <nav class="sidebar-nav">
+        <ul>
+            <?php if ($_SESSION['admin_role'] === 'invigilator') { ?>
+                <li><a href="view_students.php" class="<?= ($current_page == 'view_students.php') ? 'active' : ''; ?>">
+                    <span class="nav-icon"><i class="fas fa-users"></i></span> View Students</a></li>
+
+                <li><a href="scan.php" class="<?= ($current_page == 'scan.php') ? 'active' : ''; ?>">
+                    <span class="nav-icon"><i class="fas fa-barcode"></i></span> Scan Student ID</a></li>
+
+                <li><a href="view_reports.php" class="<?= ($current_page == 'view_reports.php') ? 'active' : ''; ?>">
+                    <span class="nav-icon"><i class="fas fa-chart-bar"></i></span> View Statistics</a></li>
+                <li><a href="logout.php">
+                    <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span> Logout</a></li>
+
+        <?php } elseif ($_SESSION['admin_role'] === 'admission_office') { ?>
+
                 <li><a href="dashboard.php" class="<?= ($current_page == 'dashboard.php') ? 'active' : ''; ?>">
                     <span class="nav-icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
                 
@@ -255,9 +275,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 
                 <li><a href="logout.php">
                     <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span> Logout</a></li>
-            </ul>
-        </nav>
-    </aside>
+            <?php } ?>
+        </ul>
+    </nav>
+</aside>
     <main class="main-content">
         <header class="content-header">
             <h1 class="page-title"><i class="fas fa-user-plus"></i> Add Students</h1>

@@ -1,25 +1,27 @@
 <?php
 session_start();
-// Prevent caching of this page
+
+// Prevent caching of login page
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
-// If already logged in, redirect to dashboard
-if (isset($_SESSION['admin_id'])) {
-    header("Location: dashboard.php");
+// If already logged in, redirect to respective dashboard
+if (isset($_SESSION['admin_role'])) {
+    if ($_SESSION['admin_role'] == 'invigilator') {
+        header("Location: invigilator_dashboard.php");
+    } elseif ($_SESSION['admin_role'] == 'admission_office') {
+        header("Location: admission_dashboard.php");
+    }
     exit();
 }
 
 require_once __DIR__ . '/../../config/db.php';
 
-// Check if the database connection was successful
+// Check database connection
 if ($conn->connect_error) {
-    // Log the error and show a user-friendly message
-    error_log("Database Connection failed on login page: " . $conn->connect_error);
-    // Instead of dying, maybe show an error message on the login page itself
-    $error_message = "Could not connect to the database. Please try again later.";
-    $conn = null; // Ensure $conn is null if connection failed
+    error_log("Database connection failed: " . $conn->connect_error);
+    $error_message = "Database connection issue. Try again later.";
+    $conn = null;
 } else {
     $error_message = '';
 
@@ -27,14 +29,12 @@ if ($conn->connect_error) {
         if (empty($_POST['username']) || empty($_POST['password'])) {
             $error_message = "Username and password are required.";
         } else {
-            // Use $conn only if connection was successful
             if ($conn) {
                 $username = $conn->real_escape_string($_POST['username']);
                 $password_attempt = $_POST['password'];
 
-                // Using prepared statements to prevent SQL injection
-                // Ensure 'password_hash' column exists in your 'admins' table
-                $stmt = $conn->prepare("SELECT id, username, password_hash FROM admins WHERE username = ?");
+                // Secure SQL query using prepared statements
+                $stmt = $conn->prepare("SELECT id, username, password_hash, role FROM admins WHERE username = ?");
                 if ($stmt) {
                     $stmt->bind_param("s", $username);
                     $stmt->execute();
@@ -42,39 +42,44 @@ if ($conn->connect_error) {
 
                     if ($result && $result->num_rows == 1) {
                         $admin = $result->fetch_assoc();
-                        // Verify the hashed password
+
+                        // Verify password
                         if (password_verify($password_attempt, $admin['password_hash'])) {
-                            // Password is correct, start session
+                            // Store session variables
                             $_SESSION['admin_id'] = $admin['id'];
                             $_SESSION['admin_username'] = $admin['username'];
+                            $_SESSION['admin_role'] = $admin['role'];
 
-                            // Redirect to dashboard
-                            header("Location: dashboard.php");
+                            // Redirect users based on their role
+                            if ($_SESSION['admin_role'] == 'invigilator') {
+                                header("Location: invigilator_dashboard.php");
+                            } elseif ($_SESSION['admin_role'] == 'admission_office') {
+                                header("Location: admission_dashboard.php");
+                            }
                             exit();
                         } else {
-                            // Invalid password
                             $error_message = "Invalid username or password.";
                         }
                     } else {
-                        // Invalid username
                         $error_message = "Invalid username or password.";
                     }
                     $stmt->close();
                 } else {
-                    $error_message = "Database error during login process.";
-                    error_log("Login statement preparation failed: " . $conn->error);
+                    $error_message = "Database error.";
+                    error_log("Login query preparation failed: " . $conn->error);
                 }
-            } // else case (connection failed) is handled above
+            }
         }
     }
 }
 
-// Close connection if it was opened successfully
+// Close connection if successful
 if ($conn && !$conn->connect_error) {
     $conn->close();
 }
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
