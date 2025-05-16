@@ -10,10 +10,16 @@ header("Pragma: no-cache");
 header("Expires: Sat, 01 Jan 2000 00:00:00 GMT");
 
 // Restrict access only to authorized users
-if ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'admission_office') {
-    header("Location: unauthorized.php");
-    exit();
+if (!isset($_SESSION['admin_role'])) {
+header("Location: /exam_monitoring/app/public/login.php");
+exit();
+
 }
+
+// Prevent caching
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 
 // Load dependencies
 require_once __DIR__ . '/../../vendor/autoload.php';
@@ -223,11 +229,25 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
     <title>Add Students - ATC Exam System</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+      <script>
+    // Use history.pushState to prevent the browser from loading a cached page when the back button is pressed.
+    if (window.history && window.history.pushState) {
+      window.history.pushState('forward', null, window.location.href);
+      window.onpopstate = function () {
+          window.history.pushState('forward', null, window.location.href);
+          // Optionally, you could also force a redirect here:
+          // window.location.href = "login.php";
+      };
+    }
+  </script>
 
 <style>
 .page-header {
@@ -412,6 +432,14 @@ function toggleSidebar() {
     document.querySelector('.sidebar').classList.toggle('collapsed');
     document.querySelector('.main-content').classList.toggle('sidebar-collapsed');
 }
+  // Only apply forced reload if we are NOT on the login page:
+  if (window.location.pathname.indexOf('login.php') === -1) {
+    window.addEventListener("pageshow", function(event) {
+      if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        window.location.reload();
+      }
+    });
+  }
 </script>
 </body>
 </html>

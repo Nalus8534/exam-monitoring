@@ -1,21 +1,40 @@
 <?php
 session_start();
 
-// Restrict access to admission office staff only
-if ($_SESSION['admin_role'] !== 'admission_office') {
-    header("Location: unauthorized.php");
+if (!isset($_SESSION['admin_role'])) {
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+    header("Location: /exam_monitoring/app/public/login.php");
     exit();
 }
 
+// Prevent caching via PHP headers
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
     <title>Admission Office Dashboard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<script>
+  if (window.history && window.history.pushState) {
+    window.history.pushState('forward', null, window.location.href);
+    window.onpopstate = function () {
+      window.history.pushState('forward', null, window.location.href);
+    };
+  }
+</script>
+
 
 <style>
 /* Centered Header */
@@ -186,6 +205,14 @@ if ($_SESSION['admin_role'] !== 'admission_office') {
 function navigate(tab) {
     window.location.href = tab;
 }
+  // Only apply forced reload if we are NOT on the login page:
+  if (window.location.pathname.indexOf('login.php') === -1) {
+    window.addEventListener("pageshow", function(event) {
+      if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        window.location.reload();
+      }
+    });
+  }
 </script>
 
 </body>

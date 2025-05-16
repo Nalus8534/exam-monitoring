@@ -1,15 +1,29 @@
 <?php
 session_start();
-// Prevent caching of this page
+if (!isset($_SESSION['admin_role'])) {
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+    header("Location: /exam_monitoring/app/public/login.php");
+    exit();
+}
+
+// Prevent caching via PHP headers
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
-header("Expires: Sat, 01 Jan 2000 00:00:00 GMT"); // A date in the past
 
 // Restrict access only to authorized users
 if ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'admission_office') {
     header("Location: unauthorized.php");
     exit();
 }
+
+
+// Prevent caching
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 
 if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
@@ -169,11 +183,25 @@ $current_page = basename($_SERVER['PHP_SELF']); // Not directly used in sidebar,
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
     <title>Edit Student - Examination Venue Monitoring</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <script>
+    // Use history.pushState to prevent the browser from loading a cached page when the back button is pressed.
+    if (window.history && window.history.pushState) {
+      window.history.pushState('forward', null, window.location.href);
+      window.onpopstate = function () {
+          window.history.pushState('forward', null, window.location.href);
+          // Optionally, you could also force a redirect here:
+          // window.location.href = "login.php";
+      };
+    }
+  </script>
 
 <style>
     .page-header {
@@ -310,21 +338,14 @@ $current_page = basename($_SERVER['PHP_SELF']); // Not directly used in sidebar,
             // This class controls the left margin of the main content
             mainContent.classList.toggle('sidebar-collapsed');
         }
-
-        // The cache control headers in PHP are the primary way to prevent back button access after logout.
-        // This client-side script is less reliable for security but can sometimes help with perceived behavior
-        // by forcing a reload if the page is loaded from the browser's cache.
-        window.onpageshow = function(event) {
-            if (event.persisted) {
-                // If the page is loaded from cache (persisted), force a reload
-                // This ensures the PHP session check runs when navigating back
-                 window.location.reload();
-            }
-        };
-
-        // --- File-Specific JavaScript (Keep this section if needed for a specific file) ---
-        // No file-specific JavaScript needed for edit_student.php
-        // -------------------------------------------------------------------------------
+          // Only apply forced reload if we are NOT on the login page:
+    if (window.location.pathname.indexOf('login.php') === -1) {
+        window.addEventListener("pageshow", function(event) {
+        if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+            window.location.reload();
+        }
+        });
+    }
 
     </script>
 </body>

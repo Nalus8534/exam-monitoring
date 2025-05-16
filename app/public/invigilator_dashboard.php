@@ -1,354 +1,304 @@
 <?php
 session_start();
+if (!isset($_SESSION['admin_role'])) {
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+    header("Location: /exam_monitoring/app/public/login.php");
+    exit();
+}
+
+// Prevent caching via PHP headers
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 
 // Restrict access to invigilators only
-if ($_SESSION['admin_role'] !== 'invigilator') {
+if (!isset($_SESSION['admin_role']) || $_SESSION['admin_role'] !== 'invigilator') {
     header("Location: unauthorized.php");
     exit();
 }
 
-?>
+require_once __DIR__. '/../../config/db.php';
 
+// Prevent caching
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
+$dashboardLink = '';
+if (isset($_SESSION['admin_role'])) {
+    if ($_SESSION['admin_role'] === 'invigilator') {
+        $dashboardLink = 'invigilator_dashboard.php';
+    } elseif ($_SESSION['admin_role'] === 'admission_office') {
+        $dashboardLink = 'admission_dashboard.php';
+    }
+    // You can add more roles as needed...
+}
+// Fetch venues from the database. Assumes your table has a column "venue_name".
+$venues = [];
+$query = "SELECT venue_name FROM venues";
+$result = $conn->query($query);
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $venues[] = $row;
+    }
+}
+// Set the default or selected venue (passed via GET or first venue if available)
+$selected_venue = (isset($_GET['venue']) && !empty($_GET['venue'])) 
+    ? $_GET['venue'] 
+    : (count($venues) > 0 ? $venues[0]['venue_name'] : '');
+$current_page = basename($_SERVER['PHP_SELF']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Invigilator Dashboard</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <style>
-/* Main Container */
-.dashboard-container {
-    display: flex;
-    gap: 20px;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 20px;
-}
-
-/* Venue Selection */
-.venue-selection {
-    margin-bottom: 20px;
-}
-
-/* Chart Section */
-.chart-section {
-    flex: 1;
-    padding: 20px;
-    background: #f8f9fa;
-    border-radius: 10px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* Student Table */
-.student-table {
-    flex: 1;
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-.student-table table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-}
-
-.student-table th, .student-table td {
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
-    text-align: left;
-}
-
-.student-table th {
-    background: #6c757d;
-    color: #fff;
-}
-
-
-/* 🎓 Exam Overview (Balanced Light Theme) */
-.exam-overview {
-    flex: 1;
-    background: #f8f9fa; /* Light Gray */
-    color: #333;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Subtle Depth */
-    text-align: left;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border-left: 5px solid #6c757d; /* Neutral Accent */
-}
-
-.exam-overview:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-}
-
-.exam-overview h2 {
-    font-size: 22px;
-    font-weight: bold;
-    margin-bottom: 12px;
-    color: #000;
-}
-
-.exam-overview p {
-    font-size: 16px;
-    color: #444;
-    margin: 8px 0;
-    font-weight: 500;
-}
-
-/* ⚡ Quick Actions (Balanced Light Theme) */
-.quick-actions {
-    flex: 1;
-    background: #f1f3f5; /* Slightly darker gray */
-    color: #333;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border-left: 5px solid #adb5bd;
-}
-
-.quick-actions:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-}
-
-.quick-actions h2 {
-    font-size: 22px;
-    font-weight: bold;
-    margin-bottom: 12px;
-    color: #000;
-}
-
-/* 🎯 Action Buttons */
-.action-btn {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    background: #6c757d; /* Neutral Gray */
-    color: #fff;
-    border: 2px solid #495057;
-    border-radius: 6px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-/* Hover & Click Effects */
-.action-btn:hover {
-    background: #495057;
-    color: #fff;
-}
-
-.action-btn:active {
-    transform: scale(0.97);
-}
-
-/* 🎥 Live Picture Feed (Optional) */
-.live-picture {
-    width: 100%;
-    height: 200px;
-    border-radius: 8px;
-    object-fit: cover;
-    border: 2px solid #444;
-    margin-bottom: 10px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* Live Picture Section */
-.live-section {
-    text-align: center;
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 20px;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-}
-
-    </style>
-</head>
-<body>
-
-<aside class="sidebar">
-    <div class="sidebar-header">
-        <img src="../assets/images/atc_logo.png" alt="Exam System" class="logo">
-        <h3>Dashboard</h3>
-    </div>
-    <nav class="sidebar-nav">
-        <ul>
-            <?php if ($_SESSION['admin_role'] === 'invigilator') { ?>
-                <li><a href="view_students.php" class="<?= ($current_page == 'view_students.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-users"></i></span> View Students</a></li>
-
-                <li><a href="scan.php" class="<?= ($current_page == 'scan.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-barcode"></i></span> Scan Student ID</a></li>
-
-                <li><a href="view_reports.php" class="<?= ($current_page == 'view_reports.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-chart-bar"></i></span> View Statistics</a></li>
-                <li><a href="logout.php">
-                    <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span> Logout</a></li>
-
-        <?php } elseif ($_SESSION['admin_role'] === 'admission_office') { ?>
-
-                <li><a href="dashboard.php" class="<?= ($current_page == 'dashboard.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-tachometer-alt"></i></span> Dashboard</a></li>
-
-                <li><a href="assign_venue.php" class="<?= ($current_page == 'assign_venue.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-map-marker-alt"></i></span> Assign Venue</a></li>
-                
-                <li><a href="add_student.php" class="<?= ($current_page == 'add_student.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-user-plus"></i></span> Add/Delete Student</a></li>
-                
-                <li><a href="upload_student_image.php" class="<?= ($current_page == 'upload_student_image.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-camera"></i></span> Upload Student Image</a></li>
-                
-                <li><a href="view_students.php" class="<?= ($current_page == 'view_students.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-users"></i></span> View Students</a></li>
-                
-                <li><a href="view_reports.php" class="<?= ($current_page == 'view_reports.php') ? 'active' : ''; ?>">
-                    <span class="nav-icon"><i class="fas fa-chart-bar"></i></span> View Statistics</a></li>
-                
-                <li><a href="logout.php">
-                    <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span> Logout</a></li>
-            <?php } ?>
-        </ul>
-    </nav>
-</aside>
-
- <main class="main-content">
-        <header class="content-header">
-            <h1>Welcome, Invigilator</h1>
-        </header>
-
-        <!-- Main Dashboard Wrapper -->
-        <div class="dashboard-container">
-            
-            <!-- Exam Overview Section -->
-            <section class="exam-overview">
-                <h2>Ongoing Exam Sessions</h2>
-                <p><strong>Current Date:</strong> <span id="current-date"></span></p>
-                <p><strong>Active Exams:</strong> <span id="active-exams">5</span></p>
-                <p><strong>Venue Assigned:</strong> <span id="assigned-venue">R12/13</span></p>
-                <p><strong>Registered Students:</strong> <span id="total-students">45</span></p>
-                <p><strong>Checked-in:</strong> <span id="checked-in">38</span></p>
-            </section>
-
-            <!-- Quick Actions Section -->
-            <section class="quick-actions">
-                <h2>Quick Actions</h2>
-                <button class="action-btn" id="scan-btn">🔍 Scan Student ID</button>
-                <button class="action-btn" id="view-students-btn">📋 View Registered Students</button>
-                <button class="action-btn" id="exam-guidelines-btn">📖 Exam Guidelines</button>
-                <button class="action-btn" id="report-incident-btn">⚠️ Report Incident</button>
-            </section>
-        <!-- Chart Section -->
-        <section class="chart-section">
-            <canvas id="studentChart"></canvas>
-        </section>
-
-        <!-- Student Table -->
-        <section class="student-table">
-                <select name="venue" id="venue" required>
-                    <option value="">-- Choose Venue --</option>
-                    <?php foreach ($venues as $v): ?>
-                        <option value="<?= htmlspecialchars($v['venue_name']); ?>" <?= ($selected_venue === $v['venue_name']) ? 'selected' : ''; ?>>
-                            <?= htmlspecialchars($v['venue_name']); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Admission No</th>
-                        <th>Name</th>
-                        <th>Program</th>
-                        <th>Exam No</th>
-                    </tr>
-                </thead>
-                <tbody id="studentData">
-                    <!-- Dynamic student data fills here -->
-                </tbody>
-            </table>
-        </section>
-
-
-        </div> <!-- End .dashboard-container -->
-
-    </main>
-
-    <script>
-        // Automatically set the current date in the Exam Overview section
-        document.getElementById("current-date").textContent = new Date().toDateString();
-    </script>
-    
-    </div>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Chart.js Library -->
-
+  <meta charset="UTF-8">
+  <title>Invigilator Dashboard</title>
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <!-- Font Awesome and Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    updateStudentData();
-});
-
-// Function to fetch and update student data based on venue selection
-function updateStudentData() {
-    let venue = document.getElementById("venue").value;
-    document.getElementById("selected-venue").textContent = venue || "Venue";
-
-    fetch(`fetch_students.php?venue=${encodeURIComponent(venue)}`)
-    .then(response => response.json())
-    .then(data => {
-        updateStudentTable(data.students);
-        updateChart(data.stats);
-    });
-}
-
-// Function to update the student list
-function updateStudentTable(students) {
-    let tableBody = document.getElementById("studentData");
-    tableBody.innerHTML = "";
-
-    students.forEach(student => {
-        let row = `<tr>
-            <td>${student.admission_no}</td>
-            <td>${student.name}</td>
-            <td>${student.program}</td>
-            <td>${student.exam_no}</td>
-        </tr>`;
-        tableBody.innerHTML += row;
-    });
-}
-
-// Function to update the chart visualization
-function updateChart(stats) {
-    let ctx = document.getElementById("studentChart").getContext("2d");
-    if (window.studentChart) window.studentChart.destroy(); // Clear old chart
-
-    window.studentChart = new Chart(ctx, {
-        type: "bar",
-        data: {
-            labels: Object.keys(stats),
-            datasets: [{
-                label: "Students per Venue",
-                data: Object.values(stats),
-                backgroundColor: "#6c757d",
-                borderColor: "#444",
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false
-        }
-    });
-}
+  window.addEventListener("pageshow", function(event) {
+    if (event.persisted || window.performance && window.performance.navigation.type === 2) {
+      // Reload the page if it was loaded from the cache.
+      window.location.reload();
+    }
+  });
 </script>
 
+
+  <style>
+    /* Global Base */
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #f4f6f8;
+      color: #333;
+      display: flex;
+      min-height: 100vh;
+    }
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background: #2c3e50;
+      padding: 20px;
+      color: #ecf0f1;
+      flex-shrink: 0;
+      min-height: 100vh;
+    }
+    .sidebar .logo {
+      width: 120px;
+      display: block;
+      margin: 0 auto 15px;
+    }
+    .sidebar h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+    }
+    .sidebar nav ul li {
+      margin: 12px 0;
+    }
+    .sidebar nav ul li a {
+      color: #bdc3c7;
+      text-decoration: none;
+      font-size: 16px;
+      padding: 10px 12px;
+      display: block;
+      border-radius: 4px;
+      transition: background 0.3s, color 0.3s;
+    }
+    .sidebar nav ul li a:hover,
+    .sidebar nav ul li a.active {
+      background: #34495e;
+      color: #ecf0f1;
+    }
+    .nav-icon { margin-right: 8px; }
+    
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      background: #ecf0f1;
+    }
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 28px;
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+    .header a.back-link {
+      text-decoration: none;
+      color: #2980b9;
+      font-size: 16px;
+      padding: 8px 12px;
+      border: 1px solid #2980b9;
+      border-radius: 4px;
+      transition: background 0.3s, color 0.3s;
+    }
+    .header a.back-link:hover {
+      background: #2980b9;
+      color: #fff;
+    }
+    
+    /* Dashboard Cards */
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      text-align: center;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }
+    .card h3 {
+      font-size: 20px;
+      margin-bottom: 10px;
+      color: #2980b9;
+    }
+    .card p {
+      font-size: 16px;
+      color: #7f8c8d;
+    }
+    /* Venue Card Special Styling */
+    .card.venue-card {
+      text-align: left;
+    }
+    .card.venue-card label {
+      font-size: 16px;
+      margin-bottom: 5px;
+      display: block;
+      color: #2c3e50;
+    }
+    .card.venue-card select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #bdc3c7;
+      border-radius: 4px;
+      font-size: 16px;
+      color: #2c3e50;
+      transition: border-color 0.3s;
+    }
+    .card.venue-card select:focus {
+      border-color: #2980b9;
+      outline: none;
+    }
+    /* Footer */
+    .footer {
+      text-align: center;
+      font-size: 14px;
+      margin-top: 40px;
+      color: #95a5a6;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <img src="../assets/images/atc_logo.png" alt="Exam System Logo" class="logo">
+    <h2>Invigilator</h2>
+    <nav>
+      <ul>
+        <li><a href="invigilator_dashboard.php" class="active"><i class="fas fa-home nav-icon"></i>Dashboard</a></li>
+        <li><a href="view_students.php"><i class="fas fa-users nav-icon"></i>View Students</a></li>
+        <li><a href="scan.php"><i class="fas fa-barcode nav-icon"></i>Scan Student ID</a></li>
+        <li><a href="view_reports.php"><i class="fas fa-chart-bar nav-icon"></i>View Statistics</a></li>
+        <li><a href="logout.php"><i class="fas fa-sign-out-alt nav-icon"></i>Logout</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Header with Back to Dashboard Link -->
+    <div class="header">
+      <h1>Invigilator Dashboard</h1>
+      <a href="invigilator_dashboard.php" class="back-link">Back to Dashboard</a>
+    </div>
+    
+    <!-- Dashboard Cards Grid -->
+    <div class="card-container">
+      <!-- Live Monitoring -->
+      <div class="card" onclick="location.href='live_monitoring.php'">
+        <h3>Live Monitoring</h3>
+        <p>Watch the exam hall in real-time.</p>
+      </div>
+      
+      <!-- Exam Schedule -->
+      <div class="card" onclick="location.href='exam_schedule.php'">
+        <h3>Exam Schedule</h3>
+        <p>View upcoming exam sessions and venues.</p>
+      </div>
+      
+      <!-- Attendance -->
+      <div class="card" onclick="location.href='attendance.php'">
+        <h3>Attendance</h3>
+        <p>Mark and review student attendance.</p>
+      </div>
+      
+      <!-- Incident Reporting -->
+      <div class="card" onclick="location.href='incident_reporting.php'">
+        <h3>Incident Reporting</h3>
+        <p>Report exam hall incidents and issues.</p>
+      </div>
+      
+      <!-- Venue Selection Card -->
+      <div class="card venue-card">
+        <h3>Current Venue</h3>
+        <label for="venue-select">Select Venue:</label>
+        <select id="venue-select" onchange="updateVenue(this.value)">
+          <?php foreach ($venues as $v): ?>
+            <option value="<?= htmlspecialchars($v['venue_name']); ?>" <?= ($selected_venue === $v['venue_name']) ? 'selected' : ''; ?>>
+              <?= htmlspecialchars($v['venue_name']); ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      &copy; <?= date('Y'); ?> Exam Monitoring System
+    </div>
+  </div>
+  
+  <!-- JavaScript -->
+  <script>
+    function updateVenue(venue) {
+      // Reload the page with the selected venue as a query parameter
+      window.location.href = 'invigilator_dashboard.php?venue=' + encodeURIComponent(venue);
+    }
+      // Only apply forced reload if we are NOT on the login page:
+  if (window.location.pathname.indexOf('login.php') === -1) {
+    window.addEventListener("pageshow", function(event) {
+      if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        window.location.reload();
+      }
+    });
+  }
+  </script>
 </body>
 </html>

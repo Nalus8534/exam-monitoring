@@ -1,13 +1,36 @@
 <?php
 session_start();
+if (!isset($_SESSION['admin_role'])) {
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+    header("Location: /exam_monitoring/app/public/login.php");
+    exit();
+}
 
-// Prevent caching
+// Prevent caching via PHP headers
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
-header("Expires: Sat, 01 Jan 2000 00:00:00 GMT");
 
 // Require database connection
 require_once __DIR__ . "/../../config/db.php";
+
+// Decide which dashboard to go to based on role
+$dashboardLink = '';
+if (isset($_SESSION['admin_role'])) {
+    if ($_SESSION['admin_role'] === 'invigilator') {
+        $dashboardLink = 'invigilator_dashboard.php';
+    } elseif ($_SESSION['admin_role'] === 'admission_office') {
+        $dashboardLink = 'admission_dashboard.php';
+    }
+    // You can add more roles as needed...
+}
+
+// Prevent caching
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
 
 // Restrict access only to authorized users
 if (!isset($_SESSION['admin_role']) || ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'admission office')) {
@@ -76,14 +99,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 $conn->close();
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
     <title>Scan Student ID - Examination Venue Monitoring</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <!-- Font Awesome for sidebar icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script>
+  window.addEventListener("pageshow", function(event) {
+    if (event.persisted || window.performance && window.performance.navigation.type === 2) {
+      // Reload the page if it was loaded from the cache.
+      window.location.reload();
+    }
+  });
+</script>
+
+
     <!-- Inbuilt CSS for scan page styling -->
     <style>
         /* Button Styling */
@@ -185,7 +222,22 @@ $current_page = basename($_SERVER['PHP_SELF']);
     font-weight: bold;
     margin-bottom: 15px;
 }
+    .page-header {
+    text-align: left;
+    padding: 15px;
+}
 
+.back-link {
+    font-size: 18px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #0056b3;
+}
     </style>
 </head>
 <body>
@@ -241,7 +293,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <header class="content-header">
         <h1>Scan Student ID</h1>
     </header>
-    
+            <header class="page-header">
+                <!-- In your shared header file -->
+                <a href="<?= $dashboardLink ?>" class="back-link">Back to Dashboard</a>
+            </header>
     <!-- Parent container using flex layout for side-by-side display -->
     <div class="scan-wrapper">
         <!-- Left Column: Form -->
@@ -394,6 +449,15 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 });
+
+  // Only apply forced reload if we are NOT on the login page:
+  if (window.location.pathname.indexOf('login.php') === -1) {
+    window.addEventListener("pageshow", function(event) {
+      if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        window.location.reload();
+      }
+    });
+  }
 </script>
 
 </body>

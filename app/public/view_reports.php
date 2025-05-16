@@ -1,9 +1,17 @@
 <?php
 session_start();
-// Prevent caching of this page
+if (!isset($_SESSION['admin_role'])) {
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+    header("Location: /exam_monitoring/app/public/login.php");
+    exit();
+}
+
+// Prevent caching via PHP headers
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
-header("Expires: Sat, 01 Jan 2000 00:00:00 GMT"); // A date in the past
 
 // Restrict access only to authorized users
 if ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'admission_office') {
@@ -16,6 +24,16 @@ if (!isset($_SESSION['admin_id'])) {
     exit();
 }
 require_once __DIR__ . '/../../config/db.php';
+
+$dashboardLink = '';
+if (isset($_SESSION['admin_role'])) {
+    if ($_SESSION['admin_role'] === 'invigilator') {
+        $dashboardLink = 'invigilator_dashboard.php';
+    } elseif ($_SESSION['admin_role'] === 'admission_office') {
+        $dashboardLink = 'admission_dashboard.php';
+    }
+    // You can add more roles as needed...
+}
 
 // Check if the database connection was successful
 if ($conn->connect_error) {
@@ -38,14 +56,27 @@ $result = $conn->query($sql);
 $admin_username = htmlspecialchars($_SESSION['admin_username']);
 $current_page = basename($_SERVER['PHP_SELF']);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
     <title>Venue Reports - Examination Venue Monitoring</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<script>
+  window.addEventListener("pageshow", function(event) {
+    if (event.persisted || window.performance && window.performance.navigation.type === 2) {
+      // Reload the page if it was loaded from the cache.
+      window.location.reload();
+    }
+  });
+</script>
+
 
     <style>
     .page-header {
@@ -117,8 +148,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <header class="content-header">
                 <h1 class="page-title">Venue Utilization Reports</h1>
             <header class="page-header">
-                <a href="admission_dashboard.php" class="back-link">⬅ Back to Dashboard</a>
-            </header>
+<!-- In your shared header file -->
+<a href="<?= $dashboardLink ?>" class="back-link">Back to Dashboard</a>            </header>
             </header>
 
             <div class="form-container"> <h3><i class="fas fa-clipboard-list"></i> Current Venue Status</h3>
@@ -197,6 +228,15 @@ $current_page = basename($_SERVER['PHP_SELF']);
         // --- File-Specific JavaScript (Keep this section if needed for a specific file) ---
         // No file-specific JavaScript needed for view_reports.php
         // -------------------------------------------------------------------------------
+
+  // Only apply forced reload if we are NOT on the login page:
+  if (window.location.pathname.indexOf('login.php') === -1) {
+    window.addEventListener("pageshow", function(event) {
+      if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        window.location.reload();
+      }
+    });
+  }
 
     </script>
 </body>

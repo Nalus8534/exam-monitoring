@@ -1,15 +1,36 @@
 <?php
-
 session_start();
-// Restrict access only to authorized users
-if ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'admission_office') {
-    header("Location: unauthorized.php");
+if (!isset($_SESSION['admin_role'])) {
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+    header("Location: /exam_monitoring/app/public/login.php");
     exit();
 }
-// view_students.php
+
+// Prevent caching via PHP headers
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
+// Restrict access only to authorized users
+if ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'admission_office') {
+    header("Location: login.php");
+    exit();
+}
 
 // 1. Include the database connection
 require_once __DIR__ . '/../../config/db.php';
+
+$dashboardLink = '';
+if (isset($_SESSION['admin_role'])) {
+    if ($_SESSION['admin_role'] === 'invigilator') {
+        $dashboardLink = 'invigilator_dashboard.php';
+    } elseif ($_SESSION['admin_role'] === 'admission_office') {
+        $dashboardLink = 'admission_dashboard.php';
+    }
+    // You can add more roles as needed...
+}
 
 if ($conn->connect_error) {
     die("Database connection failed: " . $conn->connect_error);
@@ -81,14 +102,27 @@ if (!empty($where_clause)) {
     $result_stmt = $stmt->get_result();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>View Students - Examination Venue Monitoring</title>
   <link rel="stylesheet" href="../assets/css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<script>
+  window.addEventListener("pageshow", function(event) {
+    if (event.persisted || window.performance && window.performance.navigation.type === 2) {
+      // Reload the page if it was loaded from the cache.
+      window.location.reload();
+    }
+  });
+</script>
+
+
   <style>
     /* Table styling */
     table {
@@ -218,7 +252,8 @@ if (!empty($where_clause)) {
     <header class="content-header">
       <h1 class="page-title"><i class="fas fa-users"></i> Registered Students</h1>
             <header class="page-header">
-                <a href="admission_dashboard.php" class="back-link">⬅ Back to Dashboard</a>
+              <!-- In your shared header file -->
+            <a href="<?= $dashboardLink ?>" class="back-link">Back to Dashboard</a>
             </header>
     </header>
     <div class="form-container">
@@ -312,5 +347,17 @@ if (!empty($where_clause)) {
     </div>
   </main>
 </div>
+
+<script>
+    // Only apply forced reload if we are NOT on the login page:
+  if (window.location.pathname.indexOf('login.php') === -1) {
+    window.addEventListener("pageshow", function(event) {
+      if (event.persisted || (window.performance && window.performance.navigation.type === 2)) {
+        window.location.reload();
+      }
+    });
+  }
+</script>
+
 </body>
 </html>
