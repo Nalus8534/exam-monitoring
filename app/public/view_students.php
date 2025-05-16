@@ -148,6 +148,22 @@ if (!empty($where_clause)) {
       border-radius: 5px;
       border: 1px solid #ccc;
     }
+    .page-header {
+    text-align: left;
+    padding: 15px;
+}
+
+.back-link {
+    font-size: 18px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #0056b3;
+}
   </style>
 </head>
 <body>
@@ -201,6 +217,9 @@ if (!empty($where_clause)) {
   <main class="main-content">
     <header class="content-header">
       <h1 class="page-title"><i class="fas fa-users"></i> Registered Students</h1>
+            <header class="page-header">
+                <a href="admission_dashboard.php" class="back-link">⬅ Back to Dashboard</a>
+            </header>
     </header>
     <div class="form-container">
       <!-- SEARCH FORM -->

@@ -228,6 +228,26 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <title>Add Students - ATC Exam System</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<style>
+.page-header {
+    text-align: left;
+    padding: 15px;
+}
+
+.back-link {
+    font-size: 18px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #0056b3;
+}
+</style>
+
 </head>
 <body>
 <div class="app-container">
@@ -279,6 +299,9 @@ $current_page = basename($_SERVER['PHP_SELF']);
     <main class="main-content">
         <header class="content-header">
             <h1 class="page-title"><i class="fas fa-user-plus"></i> Add Students</h1>
+                        <header class="page-header">
+                <a href="admission_dashboard.php" class="back-link">⬅ Back to Dashboard</a>
+            </header>
         </header>
         <div class="form-container">
             <!-- Clear Students Form -->

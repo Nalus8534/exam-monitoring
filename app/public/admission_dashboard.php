@@ -16,6 +16,88 @@ if ($_SESSION['admin_role'] !== 'admission_office') {
     <title>Admission Office Dashboard</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<style>
+/* Centered Header */
+.admin-header {
+    text-align: center;
+    padding: 30px;
+}
+
+.admin-header h1 {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+}
+
+.admin-instructions {
+    font-size: 18px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* Admin Dashboard Tabs (Arranged in a Row) */
+.admin-dashboard-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    padding: 20px;
+}
+
+/* Individual Tabs */
+.admin-tab {
+    background: #f1f3f5;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    width: 220px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.admin-tab:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.admin-tab h2 {
+    font-size: 20px;
+    color: #333;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-dashboard-container {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .admin-tab {
+        width: 80%;
+    }
+}
+
+.page-header {
+    text-align: left;
+    padding: 15px;
+}
+
+.back-link {
+    font-size: 18px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #0056b3;
+}
+
+</style>
+
 </head>
 <body>
 
@@ -66,14 +148,45 @@ if ($_SESSION['admin_role'] !== 'admission_office') {
     </nav>
 </aside>
 
-        <main class="main-content">
-            <header class="content-header">
-                <center>
-                    <h1>Welcome, Admission Office</h1>
-                </center>
+<!-- main content -->
+ <main class="admin-main-content">
+            <header class="page-header">
+                <a href="admission_dashboard.php" class="back-link">⬅ Back to Dashboard</a>
             </header>
-        </main>
+        <header class="admin-header">
+            <h1>Welcome, Admin</h1>
+            <p class="admin-instructions">Select a tab from the sidebar to begin managing tasks.</p>
+        </header>
+
+        <!-- Responsive Grid Layout -->
+        <div class="admin-dashboard-container">
+            <div class="admin-panel" onclick="navigate('manage_users.php')">
+                <h2>👥 Manage Users</h2>
+                <p>View, add, or modify user roles.</p>
+            </div>
+            <div class="admin-panel" onclick="navigate('manage_exams.php')">
+                <h2>📝 Manage Exams</h2>
+                <p>Schedule, edit, or monitor exam sessions.</p>
+            </div>
+            <div class="admin-panel" onclick="navigate('view_reports.php')">
+                <h2>📊 View Reports</h2>
+                <p>Access performance analytics & logs.</p>
+            </div>
+            <div class="admin-panel" onclick="navigate('settings.php')">
+                <h2>⚙ System Settings</h2>
+                <p>Configure system preferences & security.</p>
+            </div>
+        </div>
+
+    </main>
+
     </div>
+
+<script>
+function navigate(tab) {
+    window.location.href = tab;
+}
+</script>
 
 </body>
 </html>

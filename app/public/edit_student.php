@@ -174,6 +174,26 @@ $current_page = basename($_SERVER['PHP_SELF']); // Not directly used in sidebar,
     <title>Edit Student - Examination Venue Monitoring</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<style>
+    .page-header {
+    text-align: left;
+    padding: 15px;
+}
+
+.back-link {
+    font-size: 18px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #0056b3;
+}
+</style>
+
 </head>
 <body>
     <div class="app-container">

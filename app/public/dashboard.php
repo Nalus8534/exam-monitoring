@@ -236,7 +236,22 @@ $current_page = basename($_SERVER['PHP_SELF']);
          .alert-warning .fas {
              margin-right: 10px;
          }
+.page-header {
+    text-align: left;
+    padding: 15px;
+}
 
+.back-link {
+    font-size: 18px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #0056b3;
+}
     </style>
 </head>
 <body>
@@ -292,6 +307,10 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <div class="header-actions">
                     <span>Welcome, <?php echo $admin_username; ?>!</span>
                     </div>
+                <header class="page-header">
+                <a href="admission_dashboard.php" class="back-link">⬅ Back to Dashboard</a>
+            </header>
+
             </header>
 
             <?php if ($db_error): ?>

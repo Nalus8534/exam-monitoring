@@ -196,6 +196,23 @@ $conn->close();
 .image-upload:hover {
     border-color: #2980b9;
 }
+
+.page-header {
+    text-align: left;
+    padding: 15px;
+}
+
+.back-link {
+    font-size: 18px;
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #0056b3;
+}
     </style>
 
 </head>
@@ -251,7 +268,11 @@ $conn->close();
         <main class="main-content" >
             <header class="content-header">
                 <h1>Upload Student Image</h1>
+            <header class="page-header">
+                <a href="admission_dashboard.php" class="back-link">⬅ Back to Dashboard</a>
             </header>
+            </header>
+
             <div class="upload-container">
                 <h2>Upload and Assign Image to Student</h2>
                 <?php if (!empty($message)): ?>
