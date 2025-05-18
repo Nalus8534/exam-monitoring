@@ -107,7 +107,7 @@ Troubleshooting:
   net stop MySQL
   net start MySQL
 - To reset the MySQL timezone setting, issue:
-  SET GLOBAL time_zone = 'Africa/Dar_es_Salaam';
+  SET GLOBAL time_zone = 'Africa/Dar_es_Salaam'; or replace your time zone from your locaton
 
 License:
 This project is developed for academic and institutional use at Arusha Technical College. Unauthorized distribution or modifications must align with institutional guidelines.
