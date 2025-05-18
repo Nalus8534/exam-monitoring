@@ -4,3 +4,7 @@
     php_value upload_max_filesize 50M
     php_value post_max_size 50M
 </IfModule>
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^save_attendance\.php$ save_attendance.php [L]
+</IfModule>

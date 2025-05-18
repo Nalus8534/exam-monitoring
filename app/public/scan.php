@@ -1,72 +1,37 @@
 <?php
 session_start();
-if (!isset($_SESSION['admin_role'])) {
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
-    header("Location: /exam_monitoring/app/public/login.php");
+
+// Restrict access only to invigilators
+if (!isset($_SESSION['admin_role']) || $_SESSION['admin_role'] !== 'invigilator') {
+    header("Location: login.php");
     exit();
 }
 
-// Prevent caching via PHP headers
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
-
-// Require database connection
-require_once __DIR__ . "/../../config/db.php";
-
-// Decide which dashboard to go to based on role
-$dashboardLink = '';
-if (isset($_SESSION['admin_role'])) {
-    if ($_SESSION['admin_role'] === 'invigilator') {
-        $dashboardLink = 'invigilator_dashboard.php';
-    } elseif ($_SESSION['admin_role'] === 'admission_office') {
-        $dashboardLink = 'admission_dashboard.php';
-    }
-    // You can add more roles as needed...
-}
+require_once __DIR__ . "/../../config/db.php"; // Ensure correct path
 
 // Prevent caching
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
-// Restrict access only to authorized users
-if (!isset($_SESSION['admin_role']) || ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'admission office')) {
-    header("Location: unauthorized.php");
-    exit();
-}
-
-if (!isset($_SESSION['admin_id'])) {
-    header("Location: login.php");
-    exit();
-}
-
-// Check database connection
-if ($conn->connect_error) {
-    die("Database connection failed: " . $conn->connect_error);
-}
-
-// Retrieve venue options dynamically from the venues table
+// Retrieve venue options dynamically
 $venues = [];
 $resultVenues = $conn->query("SELECT venue_name FROM venues ORDER BY venue_name ASC");
-
 if ($resultVenues) {
     while ($row = $resultVenues->fetch_assoc()) {
         $venues[] = $row;
     }
 }
 
-// Initialize variables for form submission and results
+// Initialize variables
 $student_info = null;
 $error_message = "";
 $info_message = "";
 $selected_venue = "";
 $entered_admission = "";
 
-// Process form submission (venue and admission number)
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+// Process form submission
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $selected_venue = isset($_POST['venue']) ? trim($conn->real_escape_string($_POST['venue'])) : "";
     $entered_admission = isset($_POST['admission_no']) ? trim($conn->real_escape_string($_POST['admission_no'])) : "";
 
@@ -81,23 +46,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $stmt->bind_param("ss", $entered_admission, $selected_venue);
             $stmt->execute();
             $result = $stmt->get_result();
-            
             if ($result && $result->num_rows > 0) {
                 $student_info = $result->fetch_assoc();
                 $info_message = "Student details found.";
             } else {
-                $error_message = "Student with admission number '$entered_admission' not found in venue '$selected_venue'.";
+                $error_message = "Student with admission number '{$entered_admission}' not found in venue '{$selected_venue}'.";
             }
             $stmt->close();
         } else {
             $error_message = "Database query failed.";
-            error_log("Query error: " . $conn->error);
         }
     }
 }
 
 $conn->close();
-$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 
 <!DOCTYPE html>
@@ -292,11 +254,12 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <main class="main-content">
     <header class="content-header">
         <h1>Scan Student ID</h1>
-    </header>
             <header class="page-header">
                 <!-- In your shared header file -->
                 <a href="<?= $dashboardLink ?>" class="back-link">Back to Dashboard</a>
             </header>
+    </header>
+
     <!-- Parent container using flex layout for side-by-side display -->
     <div class="scan-wrapper">
         <!-- Left Column: Form -->

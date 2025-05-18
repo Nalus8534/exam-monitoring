@@ -72,16 +72,17 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 
   <style>
-    /* Global Base */
-    body {
-      margin: 0;
-      font-family: 'Roboto', sans-serif;
-      background: #f4f6f8;
-      color: #333;
-      display: flex;
-      min-height: 100vh;
-    }
-    /* Sidebar */
+  /* Global Base */
+body {
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background: #f4f6f8;
+  color: #333;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
     .sidebar {
       width: 240px;
       background: #2c3e50;
@@ -123,96 +124,123 @@ $current_page = basename($_SERVER['PHP_SELF']);
     }
     .nav-icon { margin-right: 8px; }
     
-    /* Main Content */
-    .main-content {
-      flex: 1;
-      padding: 20px;
-      background: #ecf0f1;
-    }
-    .header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-    .header h1 {
-      font-size: 28px;
-      color: #2c3e50;
-      margin-bottom: 10px;
-    }
-    .header a.back-link {
-      text-decoration: none;
-      color: #2980b9;
-      font-size: 16px;
-      padding: 8px 12px;
-      border: 1px solid #2980b9;
-      border-radius: 4px;
-      transition: background 0.3s, color 0.3s;
-    }
-    .header a.back-link:hover {
-      background: #2980b9;
-      color: #fff;
-    }
-    
-    /* Dashboard Cards */
-    .card-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 20px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      transition: transform 0.3s, box-shadow 0.3s;
-      cursor: pointer;
-      text-align: center;
-    }
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-    }
-    .card h3 {
-      font-size: 20px;
-      margin-bottom: 10px;
-      color: #2980b9;
-    }
-    .card p {
-      font-size: 16px;
-      color: #7f8c8d;
-    }
-    /* Venue Card Special Styling */
-    .card.venue-card {
-      text-align: left;
-    }
-    .card.venue-card label {
-      font-size: 16px;
-      margin-bottom: 5px;
-      display: block;
-      color: #2c3e50;
-    }
-    .card.venue-card select {
-      width: 100%;
-      padding: 8px 10px;
-      border: 1px solid #bdc3c7;
-      border-radius: 4px;
-      font-size: 16px;
-      color: #2c3e50;
-      transition: border-color 0.3s;
-    }
-    .card.venue-card select:focus {
-      border-color: #2980b9;
-      outline: none;
-    }
-    /* Footer */
-    .footer {
-      text-align: center;
-      font-size: 14px;
-      margin-top: 40px;
-      color: #95a5a6;
-    }
+/* Admin Main Content */
+.admin-main-content{
+  flex: 1;
+  padding: 40px;
+  background-color:rgb(252, 243, 225);
+}
+/* Header Section */
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 32px;
+  color: #2c3e50;
+  font-weight: bold;
+  margin-bottom: 15px;
+}
+
+/* Back to Dashboard Link */
+.header a.back-link {
+  text-decoration: none;
+  color: #fff;
+  font-size: 18px;
+  padding: 10px 15px;
+  background: #3498db;
+  border-radius: 6px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  transition: background 0.3s ease-in-out;
+}
+
+.header a.back-link i {
+  margin-right: 8px;
+}
+
+.header a.back-link:hover {
+  background: #2980b9;
+}
+
+/* Dashboard Tabs */
+.card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 25px;
+  margin-top: 20px;
+}
+
+/* Tab Cards */
+.card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 25px;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+  transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+  cursor: pointer;
+  text-align: center;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+}
+
+/* Card Titles */
+.card h3 {
+  font-size: 22px;
+  margin-bottom: 12px;
+  color: #3498db;
+  font-weight: bold;
+}
+
+/* Card Descriptions */
+.card p {
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+/* Venue Card Special Styling */
+.card.venue-card {
+  text-align: left;
+}
+
+.card.venue-card label {
+  font-size: 16px;
+  margin-bottom: 5px;
+  display: block;
+  color: #2c3e50;
+}
+
+.card.venue-card select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #bdc3c7;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #2c3e50;
+  transition: border-color 0.3s ease-in-out;
+}
+
+.card.venue-card select:focus {
+  border-color: #3498db;
+  outline: none;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  font-size: 16px;
+  margin-top: 80px;
+  color:rgb(77, 84, 85);
+}
+
   </style>
 </head>
 <body>
@@ -226,13 +254,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <li><a href="view_students.php"><i class="fas fa-users nav-icon"></i>View Students</a></li>
         <li><a href="scan.php"><i class="fas fa-barcode nav-icon"></i>Scan Student ID</a></li>
         <li><a href="view_reports.php"><i class="fas fa-chart-bar nav-icon"></i>View Statistics</a></li>
+        <li><a href="incident_reporting.php" class="active"><i class="fas fa-exclamation-triangle"></i> Report Incident</a></li>
         <li><a href="logout.php"><i class="fas fa-sign-out-alt nav-icon"></i>Logout</a></li>
       </ul>
     </nav>
   </aside>
 
   <!-- Main Content -->
-  <div class="main-content">
+  <div class="admin-main-content">
     <!-- Header with Back to Dashboard Link -->
     <div class="header">
       <h1>Invigilator Dashboard</h1>
@@ -240,19 +269,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
     </div>
     
     <!-- Dashboard Cards Grid -->
-    <div class="card-container">
-      <!-- Live Monitoring -->
-      <div class="card" onclick="location.href='live_monitoring.php'">
-        <h3>Live Monitoring</h3>
-        <p>Watch the exam hall in real-time.</p>
-      </div>
-      
-      <!-- Exam Schedule -->
-      <div class="card" onclick="location.href='exam_schedule.php'">
-        <h3>Exam Schedule</h3>
-        <p>View upcoming exam sessions and venues.</p>
-      </div>
-      
+    <div class="card-container">     
       <!-- Attendance -->
       <div class="card" onclick="location.href='attendance.php'">
         <h3>Attendance</h3>

@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+if (!isset($_SESSION['admin_role']) || $_SESSION['admin_role'] !== 'admission_office') {
+    header("Location: login.php");
+    exit();
+}
+
 if (!isset($_SESSION['admin_role'])) {
     header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
     header("Cache-Control: post-check=0, pre-check=0", false);
@@ -54,6 +59,11 @@ header("Pragma: no-cache");
     color: #666;
     margin-bottom: 20px;
 }
+
+.admin-main-content{
+      background-color:rgb(212, 250, 236);
+}
+
 
 /* Admin Dashboard Tabs (Arranged in a Row) */
 .admin-dashboard-container {
@@ -159,6 +169,11 @@ header("Pragma: no-cache");
                 
                 <li><a href="view_reports.php" class="<?= ($current_page == 'view_reports.php') ? 'active' : ''; ?>">
                     <span class="nav-icon"><i class="fas fa-chart-bar"></i></span> View Statistics</a></li>
+
+                <li><a href="view_incidents.php" class="<?= ($current_page == 'view_incidents.php') ? 'active' : ''; ?>">
+                    <span class="nav-icon"><i class="fas fa-exclamation-triangle"></i></span> View Incidents</a>
+                </li>
+
                 
                 <li><a href="logout.php">
                     <span class="nav-icon"><i class="fas fa-sign-out-alt"></i></span> Logout</a></li>
@@ -195,6 +210,11 @@ header("Pragma: no-cache");
                 <h2>⚙ System Settings</h2>
                 <p>Configure system preferences & security.</p>
             </div>
+            <div class="admin-panel" onclick="window.location.href='view_incidents.php'">
+                <h3>Incident Reports</h3>
+                <p>Review incidents reported by invigilators.</p>
+            </div>
+
         </div>
 
     </main>

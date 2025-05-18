@@ -9,7 +9,10 @@ header("Pragma: no-cache");
 // If already logged in, redirect to respective dashboard
 if (isset($_SESSION['admin_role'])) {
     if ($_SESSION['admin_role'] == 'invigilator') {
+        $_SESSION['username'] = $logged_in_user['username']; // Ensure username is stored
         header("Location: invigilator_dashboard.php");
+        exit();
+    
     } elseif ($_SESSION['admin_role'] == 'admission_office') {
         header("Location: admission_dashboard.php");
     }

@@ -19,7 +19,6 @@ if ($_SESSION['admin_role'] !== 'invigilator' && $_SESSION['admin_role'] !== 'ad
     exit();
 }
 
-
 if (!isset($_SESSION['admin_id'])) {
     header("Location: login.php");
     exit();
@@ -210,7 +209,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
         .btn-add-student { background-color: #f1c40f; color: white; } /* Yellow */
         .btn-add-student:hover { background-color: #f39c12; transform: translateY(-2px); }
-
 
         .recent-activity {
              padding: 20px;

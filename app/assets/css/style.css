@@ -121,12 +121,12 @@ body {
 }
 
 
-.main-content {
+.main-content{
   flex: 1;
   padding: 20px 30px;
   margin-left: 260px; /* Default margin for open sidebar */
   transition: margin-left 0.3s ease;
-  background-color: #ffffff;
+  background-color: #f3fffa;
   overflow-y: auto;
 }
 
@@ -147,7 +147,7 @@ body {
 }
 
 .content-header .header-actions a {
-  color: #3498db; /* Primary action color */
+  color: #2e8cca; /* Primary action color */
   text-decoration: none;
   margin-left: 20px;
   font-size: 0.95em;
@@ -266,7 +266,7 @@ body {
   flex-grow: 1; /* Allow input to take up available space */
   padding: 12px 15px;
   /* Add padding to the right for the eye icon */
-  padding-right: 40px; /* Make space for the eye icon */
+  margin-left: 25px; /* Make space for the eye icon */
   border: 1px solid #ddd;
   border-radius: 5px;
   box-sizing: border-box;
@@ -289,7 +289,7 @@ body {
   /* Remove positioning properties */
   top: 35px;
   transform: none;
-  left: -25px;
+  left: -5px;
   margin-right: 10px; /* Space between icon and input */
   color: #676767;
   font-size: 1.1em;

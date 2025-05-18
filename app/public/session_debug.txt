@@ -1,0 +1,14 @@
+Session Data: Array
+(
+    [admin_id] => 6
+    [admin_username] => invig
+    [admin_role] => invigilator
+)
+
+Session Data: Array
+(
+    [admin_id] => 6
+    [admin_username] => invig
+    [admin_role] => invigilator
+)
+
