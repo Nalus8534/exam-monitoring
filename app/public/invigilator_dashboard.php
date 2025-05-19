@@ -241,6 +241,31 @@ body {
   color:rgb(77, 84, 85);
 }
 
+    .timer-container {
+      max-width: 600px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0px 2px 8px rgba(0,0,0,0.1);
+    }
+    .timer-container h2 {
+      margin-top: 0;
+    }
+    .timer-section {
+      margin-bottom: 20px;
+    }
+    label {
+      display: inline-block;
+      width: 150px;
+    }
+    select, button {
+      padding: 8px 12px;
+      margin: 5px 0;
+    }
+    p {
+      margin: 8px 0;
+    }
   </style>
 </head>
 <body>
@@ -281,6 +306,12 @@ body {
         <h3>Incident Reporting</h3>
         <p>Report exam hall incidents and issues.</p>
       </div>
+
+      <div class="card" onclick="window.location.href='exam_timer.php';">
+        <h2>Exam Timer</h2>
+        <p>Click here to start exam timer.<br>Set the exam duration, view start and end times, and monitor countdown.</p>
+
+      </div>
       
       <!-- Venue Selection Card -->
       <div class="card venue-card">
@@ -295,13 +326,7 @@ body {
         </select>
       </div>
     </div>
-    
-    <!-- Footer -->
-    <div class="footer">
-      &copy; <?= date('Y'); ?> Exam Monitoring System
-    </div>
-  </div>
-  
+     
   <!-- JavaScript -->
   <script>
     function updateVenue(venue) {
