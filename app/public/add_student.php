@@ -80,8 +80,8 @@ foreach ($allowed_venues as $venue) {
             $message = "All fields are required.";
             $message_type = 'error';
         } else {
-            $insert_stmt = $conn->prepare("INSERT INTO students (name, admission_no, nta_level, exam_no, program, venue) VALUES (?, ?, ?, ?, ?, '')");
-            $insert_stmt->bind_param("ssiss", $name, $admission_no, $nta_level, $exam_no, $program);
+            $insert_stmt = $conn->prepare("INSERT INTO students (name, admission_no, nta_level, exam_no, program, venue) VALUES (?, ?, ?, ?, ?, ?)");
+            $insert_stmt->bind_param("ssisss", $name, $admission_no, $nta_level, $exam_no, $program, $venue_field);
             if ($insert_stmt->execute()) {
                 $message = "Student added successfully.";
                 $message_type = 'success';

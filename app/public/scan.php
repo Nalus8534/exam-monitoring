@@ -256,7 +256,7 @@ $conn->close();
         <h1>Scan Student ID</h1>
             <header class="page-header">
                 <!-- In your shared header file -->
-                <a href="<?= $dashboardLink ?>" class="back-link">Back to Dashboard</a>
+                <a href="invigilator_dashboard.php" class="back-link">Back to Dashboard</a>
             </header>
     </header>
 
